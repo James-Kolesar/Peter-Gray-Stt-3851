@@ -21,6 +21,9 @@ par(mfrow = c(2,2))
 lm1 <- lm(housing$price ~ housing$lot  + housing$bedrooms) 
 summary(lm1)
 plot(lm1)
+ggplot(housing, aes(x = lot, y = price)) +
+  geom_point(shape =2) + 
+  geom_smooth()
 ```
 
 ```{r no78}
