@@ -6,15 +6,28 @@ output: html_document
 ---
 
 ```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+library(readxl)
+library(ggplot2)
+housing <- read_xlsx("~/Stats2/projects/prjoect1/Peter-Gray-Stt-3851/Housing.xlsx")
 ```
 
 
 
 ```{r cars}
-summary(cars)
+#summary(housing)
+pairs(housing[2:8])
+
+par(mfrow = c(2,2))
+lm1 <- lm(housing$price ~ housing$lot  + housing$bedrooms) 
+summary(lm1)
+plot(lm1)
 ```
 
-
+```{r no78}
+housing2 <- housing[-74,]
+lm2 <- lm(housing2$price ~ housing2$lot  + housing2$bedrooms) 
+summary(lm2)
+plot(lm2)
+```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
