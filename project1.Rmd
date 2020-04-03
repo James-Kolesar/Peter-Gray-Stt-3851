@@ -13,7 +13,7 @@ housing <- read_xlsx("~/Stats2/projects/prjoect1/Peter-Gray-Stt-3851/Housing.xls
 
 
 
-```{r cars}
+```{r Data Summary and Exploratory Data Analysis}
 #summary(housing)
 pairs(housing[2:8])
 
@@ -41,7 +41,8 @@ par(mfrow = c(2,2))
 lm3 <- lm(housing$newPrice ~ housing$size  + housing$bedrooms) 
 summary(lm3)
 plot(lm3)
-
+ggplot(housing, aes(x = bedrooms, y = newPrice)) +
+  geom_point(shape =2)
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
