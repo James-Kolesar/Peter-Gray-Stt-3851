@@ -31,6 +31,17 @@ housing2 <- housing[-74,]
 lm2 <- lm(housing2$price ~ housing2$lot  + housing2$bedrooms) 
 summary(lm2)
 plot(lm2)
+
+```
+
+
+```{r natural log}
+housing$newPrice = log(housing$price)
+par(mfrow = c(2,2))
+lm3 <- lm(housing$newPrice ~ housing$size  + housing$bedrooms) 
+summary(lm3)
+plot(lm3)
+
 ```
 
 Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
