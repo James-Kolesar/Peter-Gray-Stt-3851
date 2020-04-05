@@ -1,0 +1,169 @@
+---
+title: "Project1"
+author: "Peter Gray, Ashley King, James Kolesar"
+date: "3/25/2020"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+library(readxl)
+library(ggplot2)
+housing <- read_xlsx("Housing.xlsx")
+```
+
+
+# 1) Data Summary and Exploratory Data Analysis
+
+```{r}
+housing_numeric <- housing[2:9]
+pairs(housing_numeric)
+```
+
+
+
+```{r}
+cor(log(housing$price), housing_numeric)
+```
+
++ Since price is so large, for the rest of the EDA, we will be using a log of price
+    + This will reduce the SE.
++ It appears that garazesize, bedroom, lot, bath, and size have a weak correlation to price
++ Bath, yearbuilt, and agestandardized have a weaker correlation
+    + (Yearbuilt and agestandardized will not be used together in the same model)
+
+```{r}
+housing$logprice <- log(housing$price)
+```
+
+## 1.1)Bath
+```{r}
+ggplot(housing, aes(x = bath, y = logprice)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
++ The data seems spread out in chunks, maybe performing a squared or cubic function to bath would help
+
+```{r}
+ggplot(housing, aes(x = bath^3, y = logprice)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
++ There is now a reasonable straight line, with a well spread SE, that could be used in a model.
+
+```{r}
+housing$bathcubed <- housing$bath ^ 3
+summary(lm(logprice ~ bathcubed, data = housing))
+```
+
++ Bath is now statistically significant
+    
+## 1.2)Size
+```{r}
+ggplot(housing, aes(x = size, y = logprice)) +
+  geom_point() +
+  geom_smooth(method = "lm", se=TRUE)
+```
+
++ There is a reasonable straight line, but the SE around the edges is high.
++ There appears to be one outlier, we will try and reduce the impact of it using a function on size
+
+```{r}
+sizecubed <- (housing$size) ^ (3)
+ggplot(housing, aes(x = sizecubed, y = logprice)) +
+  geom_point() +
+  geom_smooth(method = "lm", se=TRUE)
+```
+
++ We now have less errors in the small values of size, but the SE is worse for large sizes
+
+
+```{r}
+summary(lm(logprice ~ sizecubed, data = housing))
+```
+
++ Even after performing a transformation, size is still not significant.
+
+## 1.3)Lot
+
+
+```{r}
+ggplot(housing, aes(x = lot, y = logprice)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+```
+
++ We still have a high SE around the large value of lot, but it fits the data well.
+
+```{r}
+summary(lm(logprice ~ lot, data = housing))
+```
+
++ There appears to be a positive correlation between lot and the log of price, and no transformation needed
+
+## 1.4)Garagesize
+
+```{r}
+ggplot(housing, aes(x = garagesize, y = logprice, group = garagesize)) +
+  geom_boxplot() +
+  geom_smooth(method = "lm", se=TRUE, aes(group=1))
+```
+
++ There appears to be a positive correlation between garagesize and price
++ As the garagesize increases, so does the price, on average
+
+```{r}
+summary(lm(logprice ~ garagesize, data = housing))
+```
+
++ Garagesize is very significant, and no transformation is needed.
+
+
+## 1.5) Elem
+
+```{r}
+ggplot(housing, aes(x = elem, y = logprice, group = elem)) +
+  geom_boxplot()
+```
+
++ On average, if you are zoned in the harris elementary school district, your house will have the highest price.
++ On average, if you are zoned in the adams elementary school district, your house will have the lowest price. 
+
+
+```{r}
+summary(lm(logprice ~ elem, data = housing))
+```
+## 2) Initial Modeling
+
+Having now taken all of the best information from the explorations above, we now build a model using the most significant variables from above.
+
+```{r}
+
+ModelonPrice <- lm(housing$price ~ housing$bathcubed + housing$lot + housing$garagesize)
+summary(ModelonPrice)
+par(mfrow = c(2,2))
+plot(ModelonPrice)
+
+```
+
+## 3) Model Modification
+
+upon looking at the residuals vs fitted plot the data did not seem to be completely normal, so to try and fix this we took the natural log of the price.
+
+
+```{r}
+
+finalModelonLogPrice <-lm(housing$logprice ~ housing$bathcubed + housing$lot + housing$garagesize)
+
+summary(finalModelonLogPrice)
+par(mfrow = c(2,2))
+plot(finalModelonLogPrice)
+```
+
+## 4) Conclusion
+As can be seen by the p-value from this model, The p-value is well below .05, so the model is statistically significant.
+While the residuals vs leverage points out that point 74 has a high influence, we decided to leave it in because the model without point 74 has a significantly higher p-value and a lower r-squared value.  
+The r-squared shows that the model only explains about 18% of the variation.
+According to this model 
+
