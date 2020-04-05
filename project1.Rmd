@@ -14,7 +14,7 @@ housing <- read_xlsx("~/Stats2/projects/prjoect1/Peter-Gray-Stt-3851/Housing.xls
 
 
 ```{r Data Summary and Exploratory Data Analysis}
-#summary(housing)
+summary(housing)
 pairs(housing[2:8])
 
 par(mfrow = c(2,2))
