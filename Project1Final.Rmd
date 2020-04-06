@@ -1,5 +1,5 @@
 ---
-title: "Project1"
+title: "An Exploratory Study on What Really Makes a House a Home: Determining the Price of a House from its Characteristics"
 author: "Peter Gray, Ashley King, James Kolesar"
 date: "3/25/2020"
 output: html_document
@@ -10,9 +10,60 @@ library(readxl)
 library(ggplot2)
 housing <- read_xlsx("Housing.xlsx")
 ```
+There are many factors that come into play when looking for a house, and it's important to know how the different attributes of a house affect its price when weighing your priorities with your budget. We're examining a set of housing data from Oregon to help determine which factors most simply and most accurately predict the cost of a home.
+
+# 1) Data Summary
+First let's take a look at a numerical summary for all of the different vairables provided in the study:
+
+```{r}
+summary(housing)
+```
+
+## A few things to note for each of our variables:
++ ID:
+    + Each home was assigned a number to help distinguish each data entry. In this study, this variable will be used to refer to individual homes but has no bearing in predicting the cost of a home.
+
++ Price:
+    + The cost of a home, in thousands of dollars. This will act as our response variable.
+
++ Size:
+    + The size of a home, in thousands of square feet.
+  
++ Lot:
+    + A whole number ranging from 1 to 11 measuring the size of the lot that comes with the home, 1 being the smallest.
+  
++ Bath:
+    + The number of bathrooms.
+  
++ Bedrooms:
+    + The number of bedrooms.
+  
++ YearBuilt:
+    + The year the house was built. Goes hand in hand with the following variable.
+  
++ AgeStandardized:
+    + Takes the year that the house was built and puts it into the following calculation: (YearBuilt - 1970)/10. This keeps our data points more in line with our other variables, ranging from -6.5 to 3.5, rather than 1905 to 2005
+  
++ GarageSize:
+    + A measure of the size of each home's garage based on how many cars can fit in it.
+  
++ Status
+    + A categorical variable specifying whether the house was already sold, a pending sale, or an active listing.
+  
++ Elem:
+    + A categorical variable specifying the elementary school district for each house.
+  
+## A few things to note in general moving forward:
+
++ First impressions:
+    + Any of these variables intuitively play a role in determining the price of a house, but some may be much more influential than others. A few of these variables might also prove others obsolete: things like the size of a house, the size of the lot, and the number of bathrooms/bedrooms are all most likely very closely tied together, so all four might not be necessary for a model. Apart from obsoleteness, something like location is a complex variable to examine, and simply knowing which elementary school district a house falls into does not paint the whole picture. We should definitely be careful with intuitively obvious assumptions.
 
 
-# 1) Data Summary and Exploratory Data Analysis
++ Outliers:
+    + A few of our variables have notable outliers that we might need to be cautious of. A lot size of 11 and a 6 bedroom house suggest there might be some mansion level homes on the market, which contrast the typical home in our data. There is also a very old house, built at the beginning of the 1900s.
+  
+
+# 2) Exploratory Data Analysis
 
 ```{r}
 housing_numeric <- housing[2:9]
@@ -35,7 +86,7 @@ cor(log(housing$price), housing_numeric)
 housing$logprice <- log(housing$price)
 ```
 
-## 1.1)Bath
+## 2.1) Bath
 ```{r}
 ggplot(housing, aes(x = bath, y = logprice)) +
   geom_point() +
@@ -59,7 +110,7 @@ summary(lm(logprice ~ bathcubed, data = housing))
 
 + Bath is now statistically significant
     
-## 1.2)Size
+## 2.2) Size
 ```{r}
 ggplot(housing, aes(x = size, y = logprice)) +
   geom_point() +
@@ -85,7 +136,7 @@ summary(lm(logprice ~ sizecubed, data = housing))
 
 + Even after performing a transformation, size is still not significant.
 
-## 1.3)Lot
+## 2.3) Lot
 
 
 ```{r}
@@ -102,7 +153,7 @@ summary(lm(logprice ~ lot, data = housing))
 
 + There appears to be a positive correlation between lot and the log of price, and no transformation needed
 
-## 1.4)Garagesize
+## 2.4) Garagesize
 
 ```{r}
 ggplot(housing, aes(x = garagesize, y = logprice, group = garagesize)) +
@@ -120,7 +171,7 @@ summary(lm(logprice ~ garagesize, data = housing))
 + Garagesize is very significant, and no transformation is needed.
 
 
-## 1.5) Elem
+## 2.5) Elem
 
 ```{r}
 ggplot(housing, aes(x = elem, y = logprice, group = elem)) +
@@ -134,7 +185,7 @@ ggplot(housing, aes(x = elem, y = logprice, group = elem)) +
 ```{r}
 summary(lm(logprice ~ elem, data = housing))
 ```
-## 2) Initial Modeling
+# 3) Initial Modeling
 
 Having now taken all of the best information from the explorations above, we now build a model using the most significant variables from above.
 
@@ -147,7 +198,7 @@ plot(ModelonPrice)
 
 ```
 
-## 3) Model Modification
+# 4) Model Modification
 
 upon looking at the residuals vs fitted plot the data did not seem to be completely normal, so to try and fix this we took the natural log of the price.
 
@@ -161,9 +212,14 @@ par(mfrow = c(2,2))
 plot(finalModelonLogPrice)
 ```
 
-## 4) Conclusion
-As can be seen by the p-value from this model, The p-value is well below .05, so the model is statistically significant.
+# 5) Conclusion
+Our final model comes out to be $\hat{y}=5.3251 + .0055*x_{1} + .0142*x_{2}+.0812*x_{3}$ where $\hat{y}$ represents our predicted cost, $x_{1}$ represents the number of bathrooms, $x_{3}$ represents the lot size, and $x_{3}$ represents the garage size. Our coefficients are quite small, but we must keep in mind our price variable is measured in thousands of dollars, and on top of that we found the log of our values before determining the coefficients.
+
+The summary of our model from from part 4 shows us the various P-values from our model and variables, from which we can determine 95% confidence intervals for each. Our bath coefficient has an estamated value of .0055 and a standard error of .0025. We know that a 95% confidence interval covers 1.96 standard deviations back and forth from our mean, so our interval looks like .0055 +/- (1.96*.0025), giving us (.0006, .0104) as a 95% confidence interval. Repeating the process for garage size we get (.0218, .1406), and lot size gives us (-.0004, .0552). Our lot size confidence interval is somewhat problematic, since 0 is included within it, but examing our model before our logarithmic transformation gives us (.4162, 16.3460).
+
+To test our model let's look at house number 32, which had a lot size of 4, 2 bathrooms, and a garage size of 0. Plugging our numbers into our formula (taking into accoun that we need to cube our bathroom value) gives us 5.4787, which plugging into $10^x$ gives us a mean price of 301,092.54 dollars. Using the upper and lower bounds for our lot size and bathroom coefficients gives us 5.3283 and 5.6291, or a price confidence interval of (212,960.96, 425,696.42). The price of house number 32 is 259,900, which falls well within our confidence interval.
+
 While the residuals vs leverage points out that point 74 has a high influence, we decided to leave it in because the model without point 74 has a significantly higher p-value and a lower r-squared value.  
+
 The r-squared shows that the model only explains about 18% of the variation.
-According to this model 
 
